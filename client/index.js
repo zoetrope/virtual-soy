@@ -9,5 +9,5 @@ module.exports = {
     patch: patch,
     h: h,
     virtualize: virtualize,
-    formHtml: fromHtml
+    fromHtml: fromHtml
 };

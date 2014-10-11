@@ -12,7 +12,7 @@ module.exports = {
     patch: patch,
     h: h,
     virtualize: virtualize,
-    formHtml: fromHtml
+    fromHtml: fromHtml
 };
 
 },{"vdom-virtualize":3,"virtual-dom/diff":10,"virtual-dom/h":11,"virtual-dom/patch":36}],3:[function(require,module,exports){

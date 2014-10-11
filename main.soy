@@ -9,12 +9,16 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <script type="text/javascript" src="soyutils.js"></script>
   <script type="text/javascript" src="virtual-dom.js"></script>
+  <script type="text/javascript" src="hello_soy.js"></script>
 </head>
 
 <body>
   <div id="content">
-    Hello, {$name}!
+    {call voy.helloWorld }
+      {param name: $name /}
+    {/call}
   </div>
   <script type="text/javascript" src="app.js"></script>
 </body>

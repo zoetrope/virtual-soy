@@ -21,7 +21,10 @@ public class MainVerticle extends Verticle {
       req.response().end("Hello World!");
     });
 
-    SoyFileSet sfs = SoyFileSet.builder().add(new File("main.soy")).build();
+    SoyFileSet sfs = SoyFileSet.builder()
+        .add(new File("main.soy"))
+        .add(new File("hello.soy"))
+        .build();
     SoyTofu tofu = sfs.compileToTofu();
 
     matcher.get("/soy", req->{
@@ -31,7 +34,9 @@ public class MainVerticle extends Verticle {
       req.response().end(output);
     });
 
+    matcher.get("/soyutils.js", req -> req.response().sendFile("client/soyutils.js"));
     matcher.get("/app.js", req -> req.response().sendFile("client/app.js"));
+    matcher.get("/hello_soy.js", req -> req.response().sendFile("client/hello_soy.js"));
     matcher.get("/virtual-dom.js", req -> req.response().sendFile("client/virtual-dom.js"));
 
     server.requestHandler(matcher).listen(8181);

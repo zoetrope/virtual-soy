@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dist": "browserify --standalone virtual-dom index.js > virtual-dom2.js"
+    "dist": "browserify --standalone virtual-dom index.js > virtual-dom.js"
   },
   "author": "",
   "license": "MIT"

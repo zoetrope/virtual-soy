@@ -14,6 +14,7 @@
    * vertx run HelloVerticle -cp ./out/production/virtual-soy
    * クラス名とクラスパスを指定する
 
+
 == closure-templates
 
 === soyからjs
@@ -23,5 +24,10 @@ java -jar lib/SoyToJsSrcCompiler.jar --outputPathFormat ./output/dummy.js --srcs
 === soyからJava
 
 java -jar lib/SoyParseInfoGenerator.jar --outputDirectory ./output --javaPackage app --javaClassNameSource filename --srcs dummy.soy
+
+=== soyをレンダリングして返す
+
+vertx run SoyVerticle -cp ./out/production/virtual-soy/:./lib/soy.jar
+
 
 

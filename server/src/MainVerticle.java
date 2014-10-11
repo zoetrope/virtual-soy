@@ -21,15 +21,18 @@ public class MainVerticle extends Verticle {
       req.response().end("Hello World!");
     });
 
-    SoyFileSet sfs = SoyFileSet.builder().add(new File("hello.soy")).build();
+    SoyFileSet sfs = SoyFileSet.builder().add(new File("main.soy")).build();
     SoyTofu tofu = sfs.compileToTofu();
 
     matcher.get("/soy", req->{
-      String output = tofu.newRenderer("examples.simple.helloWorld")
+      String output = tofu.newRenderer("voy.main")
           .setData(new SoyMapData("name", "hoge"))
           .render();
       req.response().end(output);
     });
+
+    matcher.get("/app.js", req -> req.response().sendFile("client/app.js"));
+    matcher.get("/mercury.js", req -> req.response().sendFile("client/mercury.js"));
 
     server.requestHandler(matcher).listen(8181);
   }

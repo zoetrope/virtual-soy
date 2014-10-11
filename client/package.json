@@ -1,0 +1,11 @@
+{
+  "name": "voy-client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dist": "browserify --standalone virtual-dom index.js > virtual-dom2.js"
+  },
+  "author": "",
+  "license": "MIT"
+}

@@ -32,7 +32,7 @@ public class MainVerticle extends Verticle {
     });
 
     matcher.get("/app.js", req -> req.response().sendFile("client/app.js"));
-    matcher.get("/mercury.js", req -> req.response().sendFile("client/mercury.js"));
+    matcher.get("/virtual-dom.js", req -> req.response().sendFile("client/virtual-dom.js"));
 
     server.requestHandler(matcher).listen(8181);
   }

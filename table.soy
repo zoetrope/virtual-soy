@@ -1,0 +1,24 @@
+{namespace voy}
+
+/**
+ * Says hello to you.
+ * @param data
+ */
+{template .table}
+  <div id="mytable">
+  {for $i in range(1000)}
+    <div>
+    {for $j in range(20)}
+      <span>
+        {$data[$i]}
+      </span>
+      :
+      <span>
+        {$data[$j]}
+      </span>
+      |
+    {/for}
+    </div>
+  {/for}
+  </div>
+{/template}

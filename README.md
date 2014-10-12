@@ -1,33 +1,33 @@
+# virtual-soy
 
-== vert.x
+An experimental implementation for high performance template engine.
 
-=== vert.xを動かす
+## Dependency
 
- * http://vertx.io/ から最新版をダウンロード
- * 解凍してパスを通す
-   * export PATH=$PATH:~/opt/vert.x-2.1.2/bin/
- * サンプルを動かしてみる
-   * vertx run server/HelloVerticle.java
-   * ブラウザで http://localhost:8181/ にアクセス
-   * ラムダ式使ってるとパースできなくて動かない…？と思ったらJava1.7使ってたからだ。
- * コンパイルしてから動かす
-   * vertx run HelloVerticle -cp ./out/production/virtual-soy
-   * クラス名とクラスパスを指定する
+ * closure-templates
+   * https://github.com/google/closure-templates
+ * virtual-dom
+   * https://github.com/Matt-Esch/virtual-dom
+ * vdom-virtualize
+   * https://github.com/marcelklehr/vdom-virtualize
 
+## Requirement
 
-== closure-templates
+ * vert.x
+   * http://vertx.io/
 
-=== soyからjs
+## Usage
 
-java -jar lib/SoyToJsSrcCompiler.jar --outputPathFormat ./output/dummy.js --srcs dummy.soy
+### run a server
 
-=== soyからJava
+~~~
+$ ./lib/vert.x-2.1.2/bin/vertx run ./server/src/MainVerticle.java -cp ./lib/soy.jar
+~~~
 
-java -jar lib/SoyParseInfoGenerator.jar --outputDirectory ./output --javaPackage app --javaClassNameSource filename --srcs dummy.soy
+### make a client code
 
-=== soyをレンダリングして返す
-
-vertx run SoyVerticle -cp ./out/production/virtual-soy/:./lib/soy.jar
-
-
-
+~~~
+$ cd client
+$ npm install
+$ npm run dist
+~~~

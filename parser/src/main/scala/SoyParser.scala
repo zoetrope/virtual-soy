@@ -17,9 +17,6 @@ object SoyParser extends JavaTokenParsers {
       case x => println("Failure: " + x)
     }
   }
-  def parse_expr(s: String): Any ={
-    parseAll(expr, s).get
-  }
 
   // token
   def DOT: Parser[String] = "."
@@ -70,6 +67,8 @@ object SoyParser extends JavaTokenParsers {
 
   def COLON: Parser[String] = ":"
 
+  def COMMA: Parser[String] = ","
+
   //TODO need parameterRef?
   def STRING_LITERAL = stringLiteral
 
@@ -113,27 +112,29 @@ object SoyParser extends JavaTokenParsers {
   // parser
   def special_char = " " | "null" | "\r" | "\n" | "\t" | "{" | "}"
 
-  def expr_list: Parser[Any] = error("not impl")
+  def expr_list: Parser[Any] = repsep(expr, COMMA)
 
-  def key_value_list: Parser[Any] = error("not impl")
+  def key_value: Parser[Any] = string_literal ~ COLON ~ expr
 
-  def expr: Parser[Any] = PARAMETER_REF |
-    EMPTY_ARRAY_LITERAL |
-    EMPTY_OBJECT_LITERAL |
-    CAPTURED_FUNCTION_IDENTIFIER ~ LPAREN ~ expr_list ~ RPAREN |
-    CAPTURED_FUNCTION_IDENTIFIER ~ LPAREN ~ RPAREN |
-    expr ~ dot_reference |
-    expr ~ null_safe_reference |
-    expr ~ LPAREN ~ expr_list ~ RPAREN |
-    expr ~ LPAREN ~ RPAREN |
-    literal_value |
-    NULL_LITERAL |
-    NOT ~ expr |
-    expr ~ binary_operator ~ expr |
-    LPAREN ~ expr ~ RPAREN |
-    expr ~ ELVIS ~ expr |
-    expr ~ QUESTION ~ expr ~ COLON ~ expr |
-    CAPTURED_IDENTIFIER
+  def key_value_list: Parser[Any] = repsep(string_literal ~ COLON ~ expr, COMMA)
+
+  def expr: Parser[Any] =
+  //    EMPTY_ARRAY_LITERAL |
+  //      EMPTY_OBJECT_LITERAL |
+  //      CAPTURED_FUNCTION_IDENTIFIER ~ LPAREN ~ expr_list ~ RPAREN |
+//    expr ~ dot_reference |
+      //      null_safe_reference |
+      //    expr ~ LPAREN ~ expr_list ~ RPAREN |
+      //    expr ~ LPAREN ~ RPAREN |
+      //    literal_value |
+      //    NULL_LITERAL |
+      //    NOT ~ expr |
+      //    expr ~ binary_operator ~ expr |
+      //    LPAREN ~ expr ~ RPAREN |
+      //    expr ~ ELVIS ~ expr |
+      //    expr ~ QUESTION ~ expr ~ COLON ~ expr |
+      PARAMETER_REF |
+      CAPTURED_IDENTIFIER
 
   def literal_value = MINUS ~ INTEGER_LITERAL |
     INTEGER_LITERAL |
@@ -144,16 +145,14 @@ object SoyParser extends JavaTokenParsers {
     LBRACK ~ expr_list ~ RBRACK |
     LBRACK ~ key_value_list ~ RBRACK
 
+  def string_literal = stringLiteral
 
+  /*
   def string_literal = STRING_LITERAL_BEGIN ~ string_literal_buf ~ STRING_LITERAL_END |
     STRING_LITERAL_BEGIN ~ STRING_LITERAL_END
 
-  def string_literal_buf: Parser[Any] = string_literal_buf ~ STRING_LITERAL |
-    string_literal_buf ~ STRING_LITERAL_ESCAPE |
-    string_literal_buf ~ BRACE_IN_STRING |
-    STRING_LITERAL |
-    STRING_LITERAL_ESCAPE |
-    BRACE_IN_STRING
+  def string_literal_buf: Parser[Any] = rep(STRING_LITERAL | STRING_LITERAL_ESCAPE | BRACE_IN_STRING)
+  */
 
   def binary_operator = PLUS |
     MINUS |
@@ -169,12 +168,15 @@ object SoyParser extends JavaTokenParsers {
     AND |
     OR
 
+  def expr_l = PARAMETER_REF | dot_reference_l
+  def dot_reference_l = chainl1(expr,IDENTIFIER,  "." ^^{q=>(a:Any,b:Any)=>(q,a,b)})
   def dot_reference = DOT ~ CAPTURED_IDENTIFIER |
     DOT ~ INTEGER_LITERAL |
     LBRACK ~ expr ~ RBRACK
 
-  def null_safe_reference = QUESTION_DOT ~ CAPTURED_IDENTIFIER |
-    QUESTION_DOT ~ INTEGER_LITERAL
+  def index_reference = expr ~ LBRACK ~ expr ~ RBRACK
+
+  def null_safe_reference = chainl1(expr, CAPTURED_IDENTIFIER | INTEGER_LITERAL, QUESTION_DOT ^^ { o => (a: Any, b: Any) => (o, a, b)})
 
   def namespace_ident: Parser[Any] = CAPTURED_IDENTIFIER |
     NAMESPACE_IDENTIFIER |

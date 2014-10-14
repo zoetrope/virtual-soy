@@ -100,7 +100,7 @@ object SoyParser extends JavaTokenParsers {
 
   def BOOLEAN_LITERAL = "true" | "false"
 
-  def PARAMETER_REF = "$" ~ IDENTIFIER
+  def PARAMETER_REF = "$" ~> IDENTIFIER
 
   def EMPTY_ARRAY_LITERAL: Parser[String] = "[]"
 
@@ -112,38 +112,47 @@ object SoyParser extends JavaTokenParsers {
   // parser
   def special_char = " " | "null" | "\r" | "\n" | "\t" | "{" | "}"
 
-  def expr_list: Parser[Any] = repsep(expr, COMMA)
+  def expr_list: Parser[List[Expr]] = repsep(expr, COMMA)
 
-  def key_value: Parser[Any] = string_literal ~ COLON ~ expr
+  def key_value: Parser[KeyValueLiteral] = string_literal ~ COLON ~ expr ^^ {
+    case k ~ _ ~ v => KeyValueLiteral(k, v)
+  }
 
-  def key_value_list: Parser[Any] = repsep(string_literal ~ COLON ~ expr, COMMA)
+  def key_value_list: Parser[MapLiteral] = repsep(key_value, COMMA) ^^ {
+    l => MapLiteral(l)
+  }
 
-  def expr: Parser[Any] =
-  //    EMPTY_ARRAY_LITERAL |
-  //      EMPTY_OBJECT_LITERAL |
-  //      CAPTURED_FUNCTION_IDENTIFIER ~ LPAREN ~ expr_list ~ RPAREN |
-//    expr ~ dot_reference |
-      //      null_safe_reference |
+  def expr: Parser[Expr] =
+    PARAMETER_REF ^^ { p => ParameterRef(p)} |
+      //      CAPTURED_IDENTIFIER |
+      EMPTY_ARRAY_LITERAL ^^ { _ => EmptyArrayLiteral} |
+      EMPTY_OBJECT_LITERAL ^^ { _ => EmptyObjectLiteral} |
+      CAPTURED_FUNCTION_IDENTIFIER ~ LPAREN ~ expr_list ~ RPAREN ^^ {
+        case f ~ _ ~ args ~ _ => InvokeFunction(f, args)
+      } |
+      dot_reference |
+      index_reference |
+      null_safe_reference |
       //    expr ~ LPAREN ~ expr_list ~ RPAREN |
       //    expr ~ LPAREN ~ RPAREN |
-      //    literal_value |
-      //    NULL_LITERAL |
-      //    NOT ~ expr |
-      //    expr ~ binary_operator ~ expr |
-      //    LPAREN ~ expr ~ RPAREN |
-      //    expr ~ ELVIS ~ expr |
-      //    expr ~ QUESTION ~ expr ~ COLON ~ expr |
-      PARAMETER_REF |
-      CAPTURED_IDENTIFIER
+      literal_value |
+      NULL_LITERAL ^^ { _ => NullLiteral} |
+      NOT ~> expr ^^ { ex => NotOp(ex)}
 
-  def literal_value = MINUS ~ INTEGER_LITERAL |
-    INTEGER_LITERAL |
-    MINUS ~ FLOATING_POINT_LITERAL |
-    FLOATING_POINT_LITERAL |
-    string_literal |
-    BOOLEAN_LITERAL |
-    LBRACK ~ expr_list ~ RBRACK |
-    LBRACK ~ key_value_list ~ RBRACK
+  //    expr ~ binary_operator ~ expr |
+  //    LPAREN ~ expr ~ RPAREN |
+  //    expr ~ ELVIS ~ expr |
+  //    expr ~ QUESTION ~ expr ~ COLON ~ expr |
+
+  def literal_value: Parser[Expr] =
+    MINUS ~> INTEGER_LITERAL ^^ { n => IntegerLiteral(-1 * n.toInt)} |
+      INTEGER_LITERAL ^^ { n => IntegerLiteral(n.toInt)} |
+      MINUS ~> FLOATING_POINT_LITERAL ^^ { n => FloatingLiteral(-1 * n.toDouble)} |
+      FLOATING_POINT_LITERAL ^^ { n => FloatingLiteral(-1 * n.toDouble)} |
+      string_literal ^^ { s => StringLiteral(s)} |
+      BOOLEAN_LITERAL ^^ { b => BooleanLiteral(b.toBoolean)} |
+      LBRACK ~> expr_list <~ RBRACK ^^ { l => ArrayLiteral(l)} |
+      LBRACK ~> key_value_list <~ RBRACK
 
   def string_literal = stringLiteral
 
@@ -168,15 +177,17 @@ object SoyParser extends JavaTokenParsers {
     AND |
     OR
 
-  def expr_l = PARAMETER_REF | dot_reference_l
-  def dot_reference_l = chainl1(expr,IDENTIFIER,  "." ^^{q=>(a:Any,b:Any)=>(q,a,b)})
-  def dot_reference = DOT ~ CAPTURED_IDENTIFIER |
-    DOT ~ INTEGER_LITERAL |
-    LBRACK ~ expr ~ RBRACK
+  def dot_reference = chainl1(expr, CAPTURED_IDENTIFIER | INTEGER_LITERAL, "." ^^ {
+    _ => (a: Expr, b: String) => DotReference(a, b)
+  })
 
-  def index_reference = expr ~ LBRACK ~ expr ~ RBRACK
+  def index_reference = chainl1(expr, expr <~ RBRACK, "[" ^^ {
+    _ => (a: Expr, b: Expr) => IndexReference(a, b)
+  })
 
-  def null_safe_reference = chainl1(expr, CAPTURED_IDENTIFIER | INTEGER_LITERAL, QUESTION_DOT ^^ { o => (a: Any, b: Any) => (o, a, b)})
+  def null_safe_reference = chainl1(expr, CAPTURED_IDENTIFIER | INTEGER_LITERAL, QUESTION_DOT ^^ {
+    _ => (a: Expr, b: String) => NullSafeReference(a, b)
+  })
 
   def namespace_ident: Parser[Any] = CAPTURED_IDENTIFIER |
     NAMESPACE_IDENTIFIER |

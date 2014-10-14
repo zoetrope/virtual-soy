@@ -1,0 +1,7 @@
+.idea*
+parser/target
+parser/project/project
+parser/project/target
+parser/.idea
+parser/.idea_modules
+*.iml
